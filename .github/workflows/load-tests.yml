@@ -26,14 +26,13 @@ jobs:
       id: variables
       run: echo "hostIP=$(gcloud compute instances list | grep $(hostname) | awk '{print $4; exit}' )" >> $GITHUB_OUTPUT
     - name: Run load tests with Maven
-      run: |
-        mvn test -PtemplatesLoadTests \
-        -Dproject=apache-beam-testing \
-        -DartifactBucket=gs://apache-beam-testing-pranavbhandari \
-        -DhostIp=${HOST_IP} \
-        -DexportProject=cloud-teleport-testing \
-        -DexportDataset=performance_tests \
-        -DexportTable=template_performance_metrics -e -fae
+      run: mvn clean install -DskipTests -pl . -am
+    - name: run without nondex
+      run:     mvn -pl . test -Dtest=com.google.cloud.teleport.bigtable.CassandraRowMapperFnTest#testIPv4Column
+    - name: Run with Nondex
+      run:  mvn -pl . edu.illinois:nondex-maven-plugin:2.1.1:nondex -Dtest=com.google.cloud.teleport.bigtable.CassandraRowMapperFnTest#testIPv4Column
+
+
       env:
         HOST_IP: ${{ steps.variables.outputs.hostIP }}
     - name: Upload Load Tests Report
